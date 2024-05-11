@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_polyline_points/flutter_polyline_points.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:location/location.dart';
 import 'package:map_tracking_distance_calculation_flutter_bloc/constants.dart';
 import 'package:map_tracking_distance_calculation_flutter_bloc/utils/dimensions.dart';
 import 'package:map_tracking_distance_calculation_flutter_bloc/utils/images.dart';
 import 'package:map_tracking_distance_calculation_flutter_bloc/utils/styles.dart';
 import 'package:map_tracking_distance_calculation_flutter_bloc/view/base/custom_button.dart';
+import 'dart:math' show cos, sqrt, asin;
+
 
 class MapLocationTrackingScreen extends StatefulWidget {
   const MapLocationTrackingScreen({super.key});
@@ -16,11 +19,10 @@ class MapLocationTrackingScreen extends StatefulWidget {
 
 class _MapScreenState extends State<MapLocationTrackingScreen> {
   late GoogleMapController mapController;
-  /*double _originLatitude = 37.4223, _originLongitude = -122.0848;
-  double _destLatitude = 37.3346, _destLongitude = -122.0090;
-  */
-  double _originLatitude = 23.76852131771742, _originLongitude = 90.3673231832651;
-  double _destLatitude = 23.989312321830415 , _destLongitude = 90.3821892500332;
+  static LatLng sourceLocation = LatLng(23.76852131771742, 90.3673231832651); // initial dummy location
+  static LatLng destination = LatLng(23.989312321830415,  90.3821892500332); // Destination Point B will be selected with Search
+
+
   // double _originLatitude = 26.48424, _originLongitude = 50.04551;
   // double _destLatitude = 26.46423, _destLongitude = 50.06358;
   Map<MarkerId, Marker> markers = {};
@@ -29,20 +31,36 @@ class _MapScreenState extends State<MapLocationTrackingScreen> {
   PolylinePoints polylinePoints = PolylinePoints();
   String googleAPiKey = google_api_key;
 
+
+  LocationData? currentLocation;
+
+
   @override
   void initState() {
     super.initState();
 
-    /// origin marker
-    _addMarker(LatLng(_originLatitude, _originLongitude), "origin",
-        BitmapDescriptor.defaultMarker);
 
-    /// destination marker
-    _addMarker(LatLng(_destLatitude, _destLongitude), "destination",
-      BitmapDescriptor.defaultMarker,
-      // BitmapDescriptor.defaultMarkerWithHue(90)
-    );
-    _getPolyline();
+
+
+    // getCurrentLocation();
+  }
+
+  void getCurrentLocation () async {
+    Location location = Location();
+
+
+    location.getLocation().then((location) {
+      currentLocation = location;
+      sourceLocation =  LatLng(currentLocation!.latitude!, currentLocation!.longitude!);
+      setState(() {});
+    });
+
+
+    location.onLocationChanged.listen((event) {
+      currentLocation = event;
+      // _getPolyline();
+      setState(() {});
+    });
   }
 
   @override
@@ -57,7 +75,7 @@ class _MapScreenState extends State<MapLocationTrackingScreen> {
                   height: constraints.maxHeight / 1.5,
                   child: GoogleMap(
                     initialCameraPosition: CameraPosition(
-                        target: LatLng(_originLatitude, _originLongitude), zoom: 15),
+                        target: sourceLocation, zoom: 15),
                     myLocationEnabled: true,
                     tiltGesturesEnabled: true,
                     compassEnabled: true,
@@ -66,6 +84,22 @@ class _MapScreenState extends State<MapLocationTrackingScreen> {
                     onMapCreated: _onMapCreated,
                     markers: Set<Marker>.of(markers.values),
                     polylines: Set<Polyline>.of(polylines.values),
+                    onLongPress: (latlang){
+                      destination = LatLng(latlang.latitude, latlang.longitude); //
+                          /// destination marker
+                    _addMarker(destination, "destination",
+                      BitmapDescriptor.defaultMarker,
+                      // BitmapDescriptor.defaultMarkerWithHue(90)
+                    );
+
+                    double destance =  calculateDistance(currentLocation!.latitude, currentLocation!.longitude, destination.latitude, destination.longitude);
+
+                    print("distance: $destance km");
+
+
+
+                    setState(() {});
+                    },
                   ),
                 );
               }),
@@ -115,8 +149,9 @@ class _MapScreenState extends State<MapLocationTrackingScreen> {
                               color: Theme.of(context).textTheme.bodyLarge!.color!.withOpacity(.1),
                               width: MediaQuery.of(context).size.width / 2.2,
                               onPressed: (){
-
-
+                                getCurrentLocation();
+                                /// origin marker point A
+                                _addMarker(sourceLocation, "origin", BitmapDescriptor.defaultMarker);
                               },
                               buttonText: "Start Tracking",
                             ),
@@ -127,12 +162,13 @@ class _MapScreenState extends State<MapLocationTrackingScreen> {
                               color: Theme.of(context).textTheme.bodyLarge!.color!.withOpacity(.1),
                               width: MediaQuery.of(context).size.width / 2.2,
                               onPressed: (){
-
+                                polylineCoordinates.clear();
                               },
                               buttonText: "End Tracking",
                             )
                           ],
-                        )
+                        ),
+                        const Text("You Can Start Tracking By Click Start Tracking !", style: robotoMedium,)
                       ],
                     ),
                   ),
@@ -144,6 +180,16 @@ class _MapScreenState extends State<MapLocationTrackingScreen> {
       ),
     );
   }
+
+  double calculateDistance(lat1, lon1, lat2, lon2){
+    var p = 0.017453292519943295;
+    var c = cos;
+    var a = 0.5 - c((lat2 - lat1) * p)/2 +
+        c(lat1 * p) * c(lat2 * p) *
+            (1 - c((lon2 - lon1) * p))/2;
+    return 12742 * asin(sqrt(a));
+  }
+
 
   void _onMapCreated(GoogleMapController controller) async {
     mapController = controller;
@@ -158,8 +204,7 @@ class _MapScreenState extends State<MapLocationTrackingScreen> {
 
   _addPolyLine() {
     PolylineId id = const PolylineId("poly");
-    Polyline polyline = Polyline(
-        polylineId: id, color: Colors.red, points: polylineCoordinates);
+    Polyline polyline = Polyline(polylineId: id, color: Colors.red, points: polylineCoordinates);
     polylines[id] = polyline;
     setState(() {});
   }
@@ -167,13 +212,15 @@ class _MapScreenState extends State<MapLocationTrackingScreen> {
   _getPolyline() async {
     PolylineResult result = await polylinePoints.getRouteBetweenCoordinates(
         google_api_key,
-        PointLatLng(_originLatitude, _originLongitude),
-        PointLatLng(_destLatitude, _destLongitude),
+        PointLatLng(sourceLocation.latitude, sourceLocation.longitude),
+        PointLatLng(currentLocation!.latitude!, currentLocation!.longitude!), // real time updated current location lat & long
+        // const PointLatLng(23.76852131771742, 90.3673231832651), // to test polyline works fine
         travelMode: TravelMode.driving);
 
     print(result.points);
 
     if (result.points.isNotEmpty) {
+      polylineCoordinates.clear();
       print("inside_result_not_empty");
       result.points.forEach((PointLatLng point) {
         polylineCoordinates.add(LatLng(point.latitude, point.longitude));
