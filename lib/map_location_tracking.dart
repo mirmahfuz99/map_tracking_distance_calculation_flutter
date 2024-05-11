@@ -2,6 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_polyline_points/flutter_polyline_points.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:map_tracking_distance_calculation_flutter_bloc/constants.dart';
+import 'package:map_tracking_distance_calculation_flutter_bloc/utils/dimensions.dart';
+import 'package:map_tracking_distance_calculation_flutter_bloc/utils/images.dart';
+import 'package:map_tracking_distance_calculation_flutter_bloc/utils/styles.dart';
+import 'package:map_tracking_distance_calculation_flutter_bloc/view/base/custom_button.dart';
 
 class MapLocationTrackingScreen extends StatefulWidget {
   const MapLocationTrackingScreen({super.key});
@@ -45,18 +49,99 @@ class _MapScreenState extends State<MapLocationTrackingScreen> {
   Widget build(BuildContext context) {
     return SafeArea(
       child: Scaffold(
-          body: GoogleMap(
-            initialCameraPosition: CameraPosition(
-                target: LatLng(_originLatitude, _originLongitude), zoom: 15),
-            myLocationEnabled: true,
-            tiltGesturesEnabled: true,
-            compassEnabled: true,
-            scrollGesturesEnabled: true,
-            zoomGesturesEnabled: true,
-            onMapCreated: _onMapCreated,
-            markers: Set<Marker>.of(markers.values),
-            polylines: Set<Polyline>.of(polylines.values),
-          )),
+        extendBodyBehindAppBar: true,
+          body: Stack(
+            children: [
+              LayoutBuilder(builder: (BuildContext context, BoxConstraints constraints){
+                return SizedBox(
+                  height: constraints.maxHeight / 1.5,
+                  child: GoogleMap(
+                    initialCameraPosition: CameraPosition(
+                        target: LatLng(_originLatitude, _originLongitude), zoom: 15),
+                    myLocationEnabled: true,
+                    tiltGesturesEnabled: true,
+                    compassEnabled: true,
+                    scrollGesturesEnabled: true,
+                    zoomGesturesEnabled: true,
+                    onMapCreated: _onMapCreated,
+                    markers: Set<Marker>.of(markers.values),
+                    polylines: Set<Polyline>.of(polylines.values),
+                  ),
+                );
+              }),
+
+              DraggableScrollableSheet(
+                  initialChildSize: 0.3,
+
+                  builder: (BuildContext context, ScrollController scrollController){
+
+                return Container(
+                  color: Colors.white,
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: Dimensions.paddingSizeDefault),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text("Distance Between Point A & Point B",style: robotoBold,),
+                        const SizedBox(height: Dimensions.paddingSizeLarge,),
+
+
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Image.asset(Images.distance,scale: 3,),
+                            const SizedBox(width: Dimensions.paddingSizeExtraLarge,),
+                            const Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+
+                              children: [
+                                Text("Short Distance 34.4 km",style: robotoMedium,),
+                                Text("Medium Distance 34.4 km",style: robotoMedium,),
+                                Text("Long Distance 34.4 km",style: robotoMedium,),
+                              ],
+                            )
+                            
+                          ],
+                        ),
+
+                        const SizedBox(height: Dimensions.paddingSizeLarge,),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            CustomButton(
+                              fontSize: Dimensions.fontSizeDefault,
+                              radius: Dimensions.radiusExtraLarge,
+                              height: 45,
+                              color: Theme.of(context).textTheme.bodyLarge!.color!.withOpacity(.1),
+                              width: MediaQuery.of(context).size.width / 2.2,
+                              onPressed: (){
+
+
+                              },
+                              buttonText: "Start Tracking",
+                            ),
+                            CustomButton(
+                              fontSize: Dimensions.fontSizeDefault,
+                              radius: Dimensions.radiusExtraLarge,
+                              height: 45,
+                              color: Theme.of(context).textTheme.bodyLarge!.color!.withOpacity(.1),
+                              width: MediaQuery.of(context).size.width / 2.2,
+                              onPressed: (){
+
+                              },
+                              buttonText: "End Tracking",
+                            )
+                          ],
+                        )
+                      ],
+                    ),
+                  ),
+                );
+
+              })
+            ],
+          )
+      ),
     );
   }
 
@@ -72,7 +157,7 @@ class _MapScreenState extends State<MapLocationTrackingScreen> {
   }
 
   _addPolyLine() {
-    PolylineId id = PolylineId("poly");
+    PolylineId id = const PolylineId("poly");
     Polyline polyline = Polyline(
         polylineId: id, color: Colors.red, points: polylineCoordinates);
     polylines[id] = polyline;
