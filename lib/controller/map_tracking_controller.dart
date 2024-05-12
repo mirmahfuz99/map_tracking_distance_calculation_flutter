@@ -35,6 +35,28 @@ class MapTrackingController extends GetxController implements GetxService {
   void getCurrentLocation () async {
     Location location = Location();
 
+    bool serviceEnabled;
+    PermissionStatus permissionGranted;
+    serviceEnabled = await location.serviceEnabled();
+
+    if (!serviceEnabled) {
+      serviceEnabled = await location.requestService();
+      if (!serviceEnabled) {
+        ScaffoldMessenger.of(Get.context!).showSnackBar(const SnackBar(
+          content: Text("Google Location Service Is Required To Track Location"),
+        ));
+        return;
+      }
+    }
+    permissionGranted = await location.hasPermission();
+    if (permissionGranted == PermissionStatus.denied) {
+      permissionGranted = await location.requestPermission();
+      if (permissionGranted != PermissionStatus.granted) {
+        return;
+      }
+    }
+
+
     location.getLocation().then((location) {
       _currentLocation = location;
       _sourceLocation =  LatLng(currentLocation!.latitude!, currentLocation!.longitude!);
@@ -60,11 +82,10 @@ class MapTrackingController extends GetxController implements GetxService {
         google_api_key,
         PointLatLng(_sourceLocation.latitude, _sourceLocation.longitude),
         PointLatLng(_currentLocation!.latitude!, _currentLocation!.longitude!), // real time updated current location lat & long
-        // const PointLatLng(23.76852131771742, 90.3673231832651), // to test polyline works fine
+        // const PointLatLng(23.76852131771742, 90.3673231832651), // to test polyline if works fine
         travelMode: TravelMode.driving);
 
     // print(result.points);
-
     if (result.points.isNotEmpty) {
       _polylineCoordinates = [];
       result.points.forEach((PointLatLng point) {

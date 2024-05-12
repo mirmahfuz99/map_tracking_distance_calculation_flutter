@@ -68,7 +68,7 @@ class _MapScreenState extends State<MapLocationTrackingScreen> {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                const Center(child: Text("You Can Start Tracking By Click Start Tracking !", style: robotoMedium,)),
+                                Center(child: Text("You Can Choose Destination By LongPress On Map!", style: robotoBold.copyWith(color: Theme.of(context).primaryColor),)),
                                 const SizedBox(height: Dimensions.paddingSizeDefault,),
                                 const Text("Distance Between Point A & Point B",style: robotoBold,),
                                 const SizedBox(height: Dimensions.paddingSizeDefault,),
