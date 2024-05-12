@@ -15,7 +15,11 @@
 
   screenshots:
 
-<p align="left"> 
-  <a><img src="https://github.com/mirmahfuz99/map_tracking_distance_calculation_flutter_bloc/assets/20367660/46bb1f24-feac-4688-b471-84689bd92e2b" width="32" height="32" /></a>
-  <a><img src="https://github.com/mirmahfuz99/map_tracking_distance_calculation_flutter_bloc/assets/20367660/4eae82b3-8067-4700-be41-9a9c6d0f3381" width="32" height="32" /></a>
-</p>
+  
+<div class="row">
+  <div class="column">
+<img src="https://github.com/mirmahfuz99/map_tracking_distance_calculation_flutter_bloc/assets/20367660/46bb1f24-feac-4688-b471-84689bd92e2b" height="400"/>
+<img src="https://github.com/mirmahfuz99/map_tracking_distance_calculation_flutter_bloc/assets/20367660/4eae82b3-8067-4700-be41-9a9c6d0f3381" height="400"/>
+   </div>
+</div>
+
