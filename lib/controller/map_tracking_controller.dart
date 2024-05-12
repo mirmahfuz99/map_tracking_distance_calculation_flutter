@@ -57,6 +57,7 @@ class MapTrackingController extends GetxController implements GetxService {
       }
     }
 
+    location.changeSettings(distanceFilter: 10); // Minimum distance (in meters) before an update is sent.
 
     location.getLocation().then((location) {
       _currentLocation = location;
