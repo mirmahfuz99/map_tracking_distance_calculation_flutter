@@ -35,6 +35,7 @@ class MapTrackingController extends GetxController implements GetxService {
   void getCurrentLocation () async {
     Location location = Location();
 
+
     bool serviceEnabled;
     PermissionStatus permissionGranted;
     serviceEnabled = await location.serviceEnabled();
